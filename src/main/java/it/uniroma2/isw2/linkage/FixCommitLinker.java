@@ -23,13 +23,23 @@ public class FixCommitLinker {
         this.git = git;
     }
 
-    public List<FixCommit> findFixCommits(List<Ticket> tickets) throws IOException, InterruptedException {
+    /**
+     * Scansiona l'unione delle ancestry dei commit di release forniti
+     * (i tag ufficiali delle release selezionate), non solo master: alcune
+     * release derivano da branch di manutenzione mai confluiti in master,
+     * e i fix committati solo lì andrebbero altrimenti persi.
+     */
+    public List<FixCommit> findFixCommits(List<Ticket> tickets, List<String> releaseCommitHashes)
+            throws IOException, InterruptedException {
         Set<String> knownTicketIds = new HashSet<>();
         for (Ticket t : tickets) {
             knownTicketIds.add(t.getId().toUpperCase(Locale.ROOT));
         }
 
-        List<String> logLines = git.execute("git", "log", "--format=%H%x09%ct%x09%s");
+        List<String> command = new ArrayList<>(List.of("git", "log", "--all", "--format=%H%x09%ct%x09%s"));
+        command.addAll(releaseCommitHashes);
+
+        List<String> logLines = git.execute(command.toArray(new String[0]));
 
         List<FixCommit> fixCommits = new ArrayList<>();
         Set<String> seenPairs = new HashSet<>();

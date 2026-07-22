@@ -1,5 +1,6 @@
 package it.uniroma2.isw2.dataset;
 
+import it.uniroma2.isw2.model.FixCommit;
 import it.uniroma2.isw2.model.ReleaseClassEntry;
 
 import java.io.FileWriter;
@@ -22,6 +23,16 @@ public class DatasetCsvWriter {
                         .append(String.valueOf(rc.getReleaseId())).append(",")
                         .append("\"").append(rc.getClassPath()).append("\",")
                         .append(buggy ? "Yes" : "No").append("\n");
+            }
+        }
+    }
+
+
+    public void writeFixCommits(String outputPath, List<FixCommit> fixCommits) throws IOException {
+        try (FileWriter writer = new FileWriter(outputPath)) {
+            writer.append("TicketID,CommitHash\n");
+            for (FixCommit fc : fixCommits) {
+                writer.append(fc.getTicketId()).append(",").append(fc.getCommitHash()).append("\n");
             }
         }
     }
