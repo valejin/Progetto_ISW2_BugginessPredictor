@@ -1,0 +1,13 @@
+Configurazione,Classificatore,Precision,Recall,F_Measure,AUC,Kappa,NPofB20
+Baseline,IBk,0.5709,0.5226,0.5446,0.7808,0.5142,54.94
+Baseline,NaiveBayes,0.2327,0.2810,0.2538,0.7638,0.1962,19.79
+Baseline,RandomForest,0.7126,0.4452,0.5467,0.8858,0.5227,63.56
+FS + Balancing,IBk,0.2522,0.6095,0.3565,0.8299,0.2906,48.82
+FS + Balancing,NaiveBayes,0.2028,0.4432,0.2780,0.7632,0.2067,23.02
+FS + Balancing,RandomForest,0.2516,0.6033,0.3549,0.8159,0.2890,49.09
+Solo Balancing,IBk,0.4417,0.5557,0.4916,0.7785,0.4515,57.32
+Solo Balancing,NaiveBayes,0.2017,0.3604,0.2576,0.7626,0.1896,20.79
+Solo Balancing,RandomForest,0.4830,0.5328,0.5060,0.8826,0.4695,61.43
+Solo FS,IBk,0.6853,0.3849,0.4917,0.8423,0.4666,56.36
+Solo FS,NaiveBayes,0.2332,0.3191,0.2692,0.7632,0.2093,20.31
+Solo FS,RandomForest,0.6509,0.3952,0.4907,0.8254,0.4642,56.88

@@ -1,0 +1,121 @@
+Configurazione,Classificatore,Repetition,NPofB20
+Baseline,RandomForest,1,62.9981
+Baseline,RandomForest,2,62.9032
+Baseline,RandomForest,3,64.0417
+Baseline,RandomForest,4,64.3264
+Baseline,RandomForest,5,62.9032
+Baseline,RandomForest,6,63.6622
+Baseline,RandomForest,7,63.7571
+Baseline,RandomForest,8,63.7571
+Baseline,RandomForest,9,63.0930
+Baseline,RandomForest,10,64.1366
+Baseline,NaiveBayes,1,20.1139
+Baseline,NaiveBayes,2,21.4421
+Baseline,NaiveBayes,3,19.7343
+Baseline,NaiveBayes,4,19.3548
+Baseline,NaiveBayes,5,19.9241
+Baseline,NaiveBayes,6,18.7856
+Baseline,NaiveBayes,7,19.3548
+Baseline,NaiveBayes,8,19.9241
+Baseline,NaiveBayes,9,19.7343
+Baseline,NaiveBayes,10,19.5446
+Baseline,IBk,1,54.0797
+Baseline,IBk,2,54.3643
+Baseline,IBk,3,54.7438
+Baseline,IBk,4,55.8824
+Baseline,IBk,5,55.0285
+Baseline,IBk,6,55.8824
+Baseline,IBk,7,54.8387
+Baseline,IBk,8,54.0797
+Baseline,IBk,9,54.7438
+Baseline,IBk,10,55.7875
+Solo FS,RandomForest,1,57.0209
+Solo FS,RandomForest,2,55.9772
+Solo FS,RandomForest,3,57.2106
+Solo FS,RandomForest,4,57.7799
+Solo FS,RandomForest,5,57.2106
+Solo FS,RandomForest,6,57.1157
+Solo FS,RandomForest,7,56.4516
+Solo FS,RandomForest,8,56.5465
+Solo FS,RandomForest,9,56.9260
+Solo FS,RandomForest,10,56.5465
+Solo FS,NaiveBayes,1,20.2087
+Solo FS,NaiveBayes,2,20.2087
+Solo FS,NaiveBayes,3,20.0190
+Solo FS,NaiveBayes,4,20.3985
+Solo FS,NaiveBayes,5,20.3985
+Solo FS,NaiveBayes,6,20.4934
+Solo FS,NaiveBayes,7,20.3985
+Solo FS,NaiveBayes,8,20.3985
+Solo FS,NaiveBayes,9,20.3036
+Solo FS,NaiveBayes,10,20.3036
+Solo FS,IBk,1,55.8824
+Solo FS,IBk,2,55.5977
+Solo FS,IBk,3,56.8311
+Solo FS,IBk,4,57.1157
+Solo FS,IBk,5,56.6414
+Solo FS,IBk,6,56.7362
+Solo FS,IBk,7,56.2619
+Solo FS,IBk,8,55.8824
+Solo FS,IBk,9,56.3567
+Solo FS,IBk,10,56.2619
+Solo Balancing,RandomForest,1,60.7211
+Solo Balancing,RandomForest,2,61.6698
+Solo Balancing,RandomForest,3,62.0493
+Solo Balancing,RandomForest,4,61.9545
+Solo Balancing,RandomForest,5,61.7647
+Solo Balancing,RandomForest,6,61.8596
+Solo Balancing,RandomForest,7,61.0057
+Solo Balancing,RandomForest,8,61.4801
+Solo Balancing,RandomForest,9,60.8159
+Solo Balancing,RandomForest,10,61.0057
+Solo Balancing,NaiveBayes,1,20.4934
+Solo Balancing,NaiveBayes,2,19.5446
+Solo Balancing,NaiveBayes,3,20.9677
+Solo Balancing,NaiveBayes,4,20.3985
+Solo Balancing,NaiveBayes,5,20.7780
+Solo Balancing,NaiveBayes,6,21.5370
+Solo Balancing,NaiveBayes,7,20.0190
+Solo Balancing,NaiveBayes,8,20.3036
+Solo Balancing,NaiveBayes,9,22.2960
+Solo Balancing,NaiveBayes,10,21.5370
+Solo Balancing,IBk,1,55.7875
+Solo Balancing,IBk,2,57.0209
+Solo Balancing,IBk,3,55.8824
+Solo Balancing,IBk,4,58.1594
+Solo Balancing,IBk,5,57.4004
+Solo Balancing,IBk,6,58.3491
+Solo Balancing,IBk,7,58.1594
+Solo Balancing,IBk,8,56.2619
+Solo Balancing,IBk,9,58.0645
+Solo Balancing,IBk,10,58.1594
+FS + Balancing,RandomForest,1,49.3359
+FS + Balancing,RandomForest,2,49.0512
+FS + Balancing,RandomForest,3,49.3359
+FS + Balancing,RandomForest,4,49.8102
+FS + Balancing,RandomForest,5,48.6717
+FS + Balancing,RandomForest,6,49.6205
+FS + Balancing,RandomForest,7,48.6717
+FS + Balancing,RandomForest,8,48.9564
+FS + Balancing,RandomForest,9,49.1461
+FS + Balancing,RandomForest,10,48.2922
+FS + Balancing,NaiveBayes,1,23.2448
+FS + Balancing,NaiveBayes,2,23.0550
+FS + Balancing,NaiveBayes,3,23.1499
+FS + Balancing,NaiveBayes,4,23.2448
+FS + Balancing,NaiveBayes,5,22.8653
+FS + Balancing,NaiveBayes,6,22.7704
+FS + Balancing,NaiveBayes,7,22.9602
+FS + Balancing,NaiveBayes,8,22.9602
+FS + Balancing,NaiveBayes,9,23.0550
+FS + Balancing,NaiveBayes,10,22.8653
+FS + Balancing,IBk,1,48.6717
+FS + Balancing,IBk,2,48.3871
+FS + Balancing,IBk,3,49.4307
+FS + Balancing,IBk,4,49.1461
+FS + Balancing,IBk,5,48.8615
+FS + Balancing,IBk,6,48.4820
+FS + Balancing,IBk,7,48.9564
+FS + Balancing,IBk,8,48.7666
+FS + Balancing,IBk,9,49.1461
+FS + Balancing,IBk,10,48.3871
