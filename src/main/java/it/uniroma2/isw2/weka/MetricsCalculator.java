@@ -21,7 +21,7 @@ public class MetricsCalculator {
     private static final String WEKA_DATA_DIR = "weka-data";
     private static final String SUMMARY_PATH = WEKA_DATA_DIR + "/weka_results_summary.csv";
     private static final String NPOFB20_DISTRIBUTION_PATH = WEKA_DATA_DIR + "/npofb20_distribution.csv";
-    private static final String OUTPUT_PATH = WEKA_DATA_DIR + "/final_results_table.csv";
+    private static final String OUTPUT_PATH = WEKA_DATA_DIR + "/final_results_table_milestone2.csv";
 
     public static void main(String[] args) throws IOException {
         List<Map<String, String>> summaryRows = readCsv(SUMMARY_PATH);
