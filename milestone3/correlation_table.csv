@@ -1,0 +1,37 @@
+=== Correlazione con NSmells ===
+Metrica,Pearson r,Pearson p-value,Spearman rho,Spearman p-value,Entrambe significative (p<=0.05)
+NOM,0.285*,1.221e-298,0.258*,2.799e-243,Si
+FanOut,0.442*,0,0.308*,0,Si
+CyclomaticComplexity,0.530*,0,0.438*,0,Si
+LOCTouched,0.097*,3.318e-35,0.148*,1.729e-79,Si
+NFix,0.242*,4.429e-212,0.285*,4.687e-297,Si
+NAuth,0.188*,2.762e-127,0.178*,6.585e-115,Si
+LOCAdded,0.104*,1.454e-39,0.150*,2.658e-81,Si
+MaxLOCAdded,0.103*,1.962e-39,0.150*,7.139e-82,Si
+Churn,0.112*,9.423e-46,0.057*,6.905e-13,Si
+MaxChurn,0.092*,1.372e-31,0.122*,2.643e-54,Si
+NS,0.044*,2.863e-08,0.146*,2.482e-77,Si
+ND,0.029*,0.0002824,0.146*,8.941e-77,Si
+ChangeSetSize,0.016*,0.04875,0.145*,1.659e-76,Si
+Age,-0.053*,1.753e-11,-0.122*,4.422e-54,Si
+
+=== Correlazione con Bugginess (Defectiveness) ===
+Metrica,Pearson r,Pearson p-value,Spearman rho,Spearman p-value,Entrambe significative (p<=0.05)
+NOM,0.175*,1.372e-110,0.192*,2.464e-133,Si
+FanOut,0.325*,0,0.259*,1.023e-244,Si
+CyclomaticComplexity,0.265*,2.931e-257,0.230*,4.386e-192,Si
+LOCTouched,0.013,0.09685,0.061*,7.433e-15,No
+NFix,0.128*,2.715e-59,0.102*,3.441e-38,Si
+NAuth,0.165*,7.904e-98,0.151*,4.413e-82,Si
+LOCAdded,0.013,0.09026,0.060*,3.785e-14,No
+MaxLOCAdded,0.008,0.3289,0.060*,2.315e-14,No
+Churn,0.011,0.1537,0.009,0.2385,No
+MaxChurn,0.004,0.6366,0.039*,1.021e-06,No
+NS,-0.004,0.6171,0.061*,1.222e-14,No
+ND,-0.013,0.111,0.061*,1.083e-14,No
+ChangeSetSize,-0.023*,0.003198,0.060*,4.127e-14,Si
+Age,-0.037*,3.129e-06,-0.032*,3.924e-05,Si
+
+"=== NSmells <-> Bugginess (correlazione diretta, come nel paper) ==="
+Metrica,Pearson r,Pearson p-value,Spearman rho,Spearman p-value,Entrambe significative (p<=0.05)
+NSmells,0.149*,6.058e-80,0.141*,2.09e-72,Si
