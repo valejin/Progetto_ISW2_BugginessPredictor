@@ -59,9 +59,25 @@ public class PmdSmellRunner {
         }
     }
 
+    /**
+     * Risolve il path assoluto di cmd.exe tramite la variabile d'ambiente SystemRoot
+     * (impostata dal sistema operativo, non manipolabile come il PATH) invece di lanciare
+     * "cmd.exe" per nome: evita che l'OS lo cerchi nelle directory del PATH, dove una
+     * directory scrivibile da terzi potrebbe contenere un eseguibile malevolo con lo stesso
+     * nome (rule java:S4036).
+     */
+    private static String resolveCmdExePath() {
+        String systemRoot = System.getenv("SystemRoot");
+        if (systemRoot == null || systemRoot.isBlank()) {
+            throw new IllegalStateException(
+                    "Variabile d'ambiente SystemRoot non impostata: impossibile risolvere cmd.exe");
+        }
+        return Path.of(systemRoot, "System32", "cmd.exe").toString();
+    }
+
     private void runPmd(Path fileListPath, Path reportPath) throws IOException, InterruptedException {
         ProcessBuilder pb = new ProcessBuilder(
-                "cmd.exe", "/c", pmdExecutablePath, "check",
+                resolveCmdExePath(), "/c", pmdExecutablePath, "check",
                 "--file-list", fileListPath.toString(),
                 "-R", RULESET,
                 "-f", "csv",
@@ -123,6 +139,7 @@ public class PmdSmellRunner {
     }
 
     // Split che rispetta le virgolette: implementazione centralizzata in CsvLineParser
+    // (era duplicata identica in piu' classi, generando duplicazione rilevata da SonarCloud).
     private String[] splitCsvLine(String line) {
         return CsvLineParser.splitCsvLine(line);
     }
