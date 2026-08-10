@@ -61,12 +61,15 @@ public class Milestone1DatasetMain {
         Map<String, Integer> smellsByReleaseAndClass =
                 computeSmellsByReleaseAndClass(pmdRunner, selected, snapshotCommits, classPathsByRelease);
 
-        StructuralMetricsCalculator structuralCalc = new StructuralMetricsCalculator(git);
-        PerPathHistoryFetcher pathFetcher = new PerPathHistoryFetcher(git);
-        ProcessMetricsCalculator processCalc = new ProcessMetricsCalculator(fixCommitHashes);
+        MetricsCalculators calculators = new MetricsCalculators(
+                new StructuralMetricsCalculator(git),
+                new PerPathHistoryFetcher(git),
+                new ProcessMetricsCalculator(fixCommitHashes));
 
-        DatasetWriteResult result = writeDataset(labeledRows, snapshotCommits, structuralCalc, pathFetcher,
-                processCalc, commitStatsByRelease, releaseDateById, windowStartByReleaseId, smellsByReleaseAndClass);
+        ReleaseContext releaseContext = new ReleaseContext(snapshotCommits, commitStatsByRelease,
+                releaseDateById, windowStartByReleaseId, smellsByReleaseAndClass);
+
+        DatasetWriteResult result = writeDataset(labeledRows, releaseContext, calculators);
 
         AppLogger.info("Dataset finale scritto in " + OUTPUT_CSV);
         AppLogger.info("Righe totali: " + result.processed());
@@ -143,13 +146,34 @@ public class Milestone1DatasetMain {
     private record DatasetWriteResult(int processed, long buggyCount) {
     }
 
+    /**
+     * Raggruppa i tre collaboratori sempre usati insieme per calcolare le metriche di una riga
+     * (strutturali, storico dei tocchi sul file, di processo). Estratto per stare sotto il limite
+     * di 7 parametri per metodo (rule java:S107).
+     */
+    private record MetricsCalculators(
+            StructuralMetricsCalculator structuralCalc,
+            PerPathHistoryFetcher pathFetcher,
+            ProcessMetricsCalculator processCalc) {
+    }
+
+    /**
+     * Raggruppa le strutture dati derivate dalle release selezionate (snapshot, commit stats,
+     * finestre temporali, smell), tutte indicizzate per releaseId e passate sempre insieme.
+     * Estratto per stare sotto il limite di 7 parametri per metodo (rule java:S107).
+     */
+    private record ReleaseContext(
+            Map<Integer, String> snapshotCommits,
+            Map<Integer, Map<String, CommitStats>> commitStatsByRelease,
+            Map<Integer, LocalDateTime> releaseDateById,
+            Map<Integer, LocalDateTime> windowStartByReleaseId,
+            Map<String, Integer> smellsByReleaseAndClass) {
+    }
+
     /** Loop finale: per ogni riga etichettata calcola metriche strutturali + di processo + smell e scrive il CSV. */
     private static DatasetWriteResult writeDataset(
-            List<LabeledClassRelease> labeledRows, Map<Integer, String> snapshotCommits,
-            StructuralMetricsCalculator structuralCalc, PerPathHistoryFetcher pathFetcher,
-            ProcessMetricsCalculator processCalc, Map<Integer, Map<String, CommitStats>> commitStatsByRelease,
-            Map<Integer, LocalDateTime> releaseDateById, Map<Integer, LocalDateTime> windowStartByReleaseId,
-            Map<String, Integer> smellsByReleaseAndClass) throws IOException, InterruptedException {
+            List<LabeledClassRelease> labeledRows, ReleaseContext releaseContext, MetricsCalculators calculators)
+            throws IOException, InterruptedException {
 
         int processed = 0;
         long buggyCount = 0;
@@ -159,13 +183,12 @@ public class Milestone1DatasetMain {
             writer.write("\n");
 
             for (LabeledClassRelease row : labeledRows) {
-                String commitHash = snapshotCommits.get(row.getReleaseId());
+                String commitHash = releaseContext.snapshotCommits().get(row.getReleaseId());
                 if (commitHash == null) {
                     continue;
                 }
 
-                DatasetRow datasetRow = buildDatasetRow(row, commitHash, structuralCalc, pathFetcher, processCalc,
-                        commitStatsByRelease, releaseDateById, windowStartByReleaseId, smellsByReleaseAndClass);
+                DatasetRow datasetRow = buildDatasetRow(row, commitHash, calculators, releaseContext);
 
                 writer.write(datasetRow.toCsvRow());
                 writer.write("\n");
@@ -187,22 +210,19 @@ public class Milestone1DatasetMain {
 
     /** Costruisce la riga di dataset per una singola coppia (classe, release). */
     private static DatasetRow buildDatasetRow(
-            LabeledClassRelease row, String commitHash, StructuralMetricsCalculator structuralCalc,
-            PerPathHistoryFetcher pathFetcher, ProcessMetricsCalculator processCalc,
-            Map<Integer, Map<String, CommitStats>> commitStatsByRelease, Map<Integer, LocalDateTime> releaseDateById,
-            Map<Integer, LocalDateTime> windowStartByReleaseId, Map<String, Integer> smellsByReleaseAndClass)
+            LabeledClassRelease row, String commitHash, MetricsCalculators calculators, ReleaseContext releaseContext)
             throws IOException, InterruptedException {
 
-        StructuralMetrics sm = structuralCalc.compute(commitHash, row.getClassPath());
+        StructuralMetrics sm = calculators.structuralCalc().compute(commitHash, row.getClassPath());
 
-        List<FileTouch> touches = pathFetcher.fetchHistoryUntilRelease(commitHash, row.getClassPath());
+        List<FileTouch> touches = calculators.pathFetcher().fetchHistoryUntilRelease(commitHash, row.getClassPath());
         Map<String, CommitStats> statsForRelease =
-                commitStatsByRelease.getOrDefault(row.getReleaseId(), Map.of());
-        LocalDateTime windowEnd = releaseDateById.get(row.getReleaseId());
-        LocalDateTime windowStart = windowStartByReleaseId.get(row.getReleaseId());
-        ProcessMetrics pm = processCalc.compute(touches, statsForRelease, windowStart, windowEnd);
+                releaseContext.commitStatsByRelease().getOrDefault(row.getReleaseId(), Map.of());
+        LocalDateTime windowEnd = releaseContext.releaseDateById().get(row.getReleaseId());
+        LocalDateTime windowStart = releaseContext.windowStartByReleaseId().get(row.getReleaseId());
+        ProcessMetrics pm = calculators.processCalc().compute(touches, statsForRelease, windowStart, windowEnd);
 
-        int nSmells = smellsByReleaseAndClass.getOrDefault(
+        int nSmells = releaseContext.smellsByReleaseAndClass().getOrDefault(
                 row.getReleaseId() + "#" + row.getClassPath(), 0);
 
         return new DatasetRow(
