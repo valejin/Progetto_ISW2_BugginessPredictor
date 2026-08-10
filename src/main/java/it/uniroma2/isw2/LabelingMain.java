@@ -1,0 +1,118 @@
+package it.uniroma2.isw2;
+
+import it.uniroma2.isw2.acquisition.ReleaseCsvReader;
+import it.uniroma2.isw2.acquisition.TicketCsvReader;
+import it.uniroma2.isw2.dataset.DatasetCsvWriter;
+import it.uniroma2.isw2.linkage.*;
+import it.uniroma2.isw2.model.*;
+import it.uniroma2.isw2.proportion.AffectedVersionIvResolver;
+import it.uniroma2.isw2.proportion.OpeningFixVersionCalculator;
+import it.uniroma2.isw2.proportion.ProportionEstimator;
+
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+
+public class LabelingMain {
+
+    public static void main(String[] args) throws IOException, InterruptedException {
+        List<Release> allReleases = new ReleaseCsvReader().readReleases("SYNCOPEVersionInfo.csv");
+        List<Release> selected = ReleaseSelector.selectFirstN(allReleases, 25);
+        List<Ticket> tickets = new TicketCsvReader().readTickets("SYNCOPETickets.csv");
+
+        System.out.println("Release totali: " + allReleases.size());
+        System.out.println("Release selezionate: " + selected.size());
+        System.out.println("Ticket letti: " + tickets.size());
+
+
+        // proportion
+        OpeningFixVersionCalculator ovFvCalc = new OpeningFixVersionCalculator(allReleases);
+        AffectedVersionIvResolver ivResolver = new AffectedVersionIvResolver(allReleases);
+        ProportionEstimator proportionEstimator = new ProportionEstimator();
+
+        for (Ticket t : tickets) {
+            ovFvCalc.computeOpeningAndFixVersion(t);
+        }
+
+        // Scarta i ticket senza OV valida (aperti prima della primissima release nota):
+        int beforeFilter = tickets.size();
+        tickets.removeIf(t -> t.getOpeningVersion() == null);
+        int discardedForNullOv = beforeFilter - tickets.size();
+        System.out.println("Ticket scartati per OV nulla (creati prima della prima release): " + discardedForNullOv);
+
+        List<Ticket> withKnownIv = new ArrayList<>();
+        List<Ticket> toEstimate = new ArrayList<>();
+
+        for (Ticket t : tickets) {
+            if (t.getFixVersion() == null) {
+                continue; // fix non ancora in nessuna release nota: escluso dal labeling
+            }
+            Optional<Integer> iv = ivResolver.resolveIv(t);
+            if (iv.isPresent()) {
+                t.setInjectedVersion(iv.get());
+                withKnownIv.add(t);
+            } else {
+                toEstimate.add(t);
+            }
+        }
+
+        double avgP = proportionEstimator.computeAverageProportion(withKnownIv);
+        System.out.println("Proportion media: " + avgP);
+        System.out.println("Ticket con IV nota da AV: " + withKnownIv.size());
+        System.out.println("Ticket da stimare con Proportion: " + toEstimate.size());
+
+        for (Ticket t : toEstimate) {
+            t.setInjectedVersion(proportionEstimator.estimateIv(t, avgP));
+        }
+
+
+        // git + snapshot delle release (spostato qui: serve agli hash prima del linkage)
+        String repositoryPath = "C:/Users/Valen/Desktop/syncope"; // path progetto locale
+
+        GitCommandExecutor git = new GitCommandExecutor(repositoryPath);
+
+        ReleaseSnapshotResolver snapshotResolver = new ReleaseSnapshotResolver(git);
+        Map<Integer, String> snapshotCommits = snapshotResolver.resolveSnapshotCommits(selected);
+        System.out.println("Snapshot risolti: " + snapshotCommits.size() + " su " + selected.size());
+
+
+        // linkage — ora ancorato all'unione delle ancestry dei 25 tag, non solo master
+        FixCommitLinker fixCommitLinker = new FixCommitLinker(git);
+        BuggyClassExtractor buggyClassExtractor = new BuggyClassExtractor(git);
+
+        List<FixCommit> fixCommits = fixCommitLinker.findFixCommits(tickets, new ArrayList<>(snapshotCommits.values()));
+        System.out.println("Fix commit trovati: " + fixCommits.size());
+
+        List<BuggyClassEntry> buggyClassEntries = buggyClassExtractor.extract(fixCommits);
+        System.out.println("Coppie (ticket, classe buggy): " + buggyClassEntries.size());
+
+
+        // labeling (riusa snapshotCommits già risolto sopra, nessuna doppia chiamata)
+        ReleaseClassInventory inventoryBuilder = new ReleaseClassInventory(git);
+        List<ReleaseClassEntry> inventory = inventoryBuilder.buildInventory(snapshotCommits);
+        System.out.println("Righe inventario (classe, release): " + inventory.size());
+
+        List<Ticket> allValidTickets = new ArrayList<>();
+        allValidTickets.addAll(withKnownIv);
+        allValidTickets.addAll(toEstimate);
+
+        BugLabeler bugLabeler = new BugLabeler();
+        Map<String, Boolean> labels = bugLabeler.labelClasses(inventory, allValidTickets, buggyClassEntries);
+
+        long buggyCount = labels.values().stream().filter(Boolean::booleanValue).count();
+        System.out.println("Coppie (classe, release) totali: " + labels.size());
+        System.out.printf("Etichettate buggy: %d (%.2f%%)%n", buggyCount, 100.0 * buggyCount / labels.size());
+
+
+        // checkpoint inventario
+        DatasetCsvWriter csvWriter = new DatasetCsvWriter();
+        csvWriter.writeLabeledInventory("labeled_inventory_checkpoint.csv", "SYNCOPE", inventory, labels);
+        System.out.println("Checkpoint scritto: labeled_inventory_checkpoint.csv");
+
+        // checkpoint
+        csvWriter.writeFixCommits("fix_commits_checkpoint.csv", fixCommits);
+        System.out.println("Checkpoint scritto: fix_commits_checkpoint.csv");
+    }
+}
