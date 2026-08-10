@@ -1,6 +1,7 @@
 package it.uniroma2.isw2.acquisition;
 
 import it.uniroma2.isw2.model.Ticket;
+import it.uniroma2.isw2.util.CsvLineParser;
 
 import java.io.BufferedReader;
 import java.io.FileReader;
@@ -48,28 +49,8 @@ public class TicketCsvReader {
         return OffsetDateTime.parse(raw, JIRA_DATE_FORMAT).toLocalDateTime();
     }
 
-    // Split che rispetta le virgolette, cosi' una virgola dentro un campo
-    // quotato non spezza la riga a meta'. Parsing a scansione lineare (niente regex):
-    // la versione precedente basata su regex con lookahead e quantificatori annidati
-    // poteva causare backtracking catastrofico/StackOverflowError su righe lunghe.
+    // Split che rispetta le virgolette: implementazione centralizzata in CsvLineParser
     private String[] splitCsvLine(String line) {
-        List<String> fields = new ArrayList<>();
-        StringBuilder current = new StringBuilder();
-        boolean insideQuotes = false;
-
-        for (int i = 0; i < line.length(); i++) {
-            char c = line.charAt(i);
-            if (c == '"') {
-                insideQuotes = !insideQuotes;
-            } else if (c == ',' && !insideQuotes) {
-                fields.add(current.toString().trim());
-                current.setLength(0);
-            } else {
-                current.append(c);
-            }
-        }
-        fields.add(current.toString().trim());
-
-        return fields.toArray(new String[0]);
+        return CsvLineParser.splitCsvLine(line);
     }
 }
