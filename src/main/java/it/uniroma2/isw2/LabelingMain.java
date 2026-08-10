@@ -9,6 +9,7 @@ import it.uniroma2.isw2.proportion.AffectedVersionIvResolver;
 import it.uniroma2.isw2.proportion.OpeningFixVersionCalculator;
 import it.uniroma2.isw2.proportion.ProportionEstimator;
 import it.uniroma2.isw2.util.AppLogger;
+import it.uniroma2.isw2.util.ProjectConfig;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -70,7 +71,7 @@ public class LabelingMain {
 
 
         // git + snapshot delle release (spostato qui: serve agli hash prima del linkage)
-        String repositoryPath = "C:/Users/Valen/Desktop/syncope"; // path progetto locale
+        String repositoryPath = ProjectConfig.repositoryPath(); // configurabile via -Dsyncope.repo.path o SYNCOPE_REPO_PATH
 
         GitCommandExecutor git = new GitCommandExecutor(repositoryPath);
 
