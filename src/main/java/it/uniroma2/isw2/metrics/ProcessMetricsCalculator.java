@@ -27,8 +27,15 @@ public class ProcessMetricsCalculator {
         long windowEndEpoch = toEpoch(windowEnd);
         Long windowStartEpoch = windowStart == null ? null : toEpoch(windowStart);
 
-        int locTouched = 0, locAdded = 0, maxLocAdded = 0, churn = 0, maxChurn = 0;
-        int ns = 0, nd = 0, changeSetSize = 0, nFix = 0;
+        int locTouched = 0;
+        int locAdded = 0;
+        int maxLocAdded = 0;
+        int churn = 0;
+        int maxChurn = 0;
+        int ns = 0;
+        int nd = 0;
+        int changeSetSize = 0;
+        int nFix = 0;
         Set<String> authorsUpToRelease = new HashSet<>();
         long firstTouchEpoch = Long.MAX_VALUE;
 
@@ -66,8 +73,19 @@ public class ProcessMetricsCalculator {
 
         long ageDays = firstTouchEpoch == Long.MAX_VALUE ? 0 : (windowEndEpoch - firstTouchEpoch) / 86400L;
 
-        return new ProcessMetrics(locTouched, nFix, authorsUpToRelease.size(), locAdded, maxLocAdded,
-                churn, maxChurn, ns, nd, changeSetSize, ageDays);
+        return ProcessMetrics.builder()
+                .locTouched(locTouched)
+                .nFix(nFix)
+                .nAuth(authorsUpToRelease.size())
+                .locAdded(locAdded)
+                .maxLocAdded(maxLocAdded)
+                .churn(churn)
+                .maxChurn(maxChurn)
+                .ns(ns)
+                .nd(nd)
+                .changeSetSize(changeSetSize)
+                .ageDays(ageDays)
+                .build();
     }
 
     private long toEpoch(LocalDateTime dt) {

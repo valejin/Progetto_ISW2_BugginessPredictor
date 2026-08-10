@@ -36,7 +36,10 @@ public class BuggyClassExtractor {
 
             Map<String, Boolean> filesModified = diffProductionJavaFiles(parentHash, fix.getCommitHash());
             for (Map.Entry<String, Boolean> entry : filesModified.entrySet()) {
-                if (!entry.getValue()) {
+                // Boolean.TRUE.equals(...) invece di !entry.getValue(): unboxing null-safe,
+                // il confronto avviene su un boolean primitivo invece che sull'oggetto boxed.
+                boolean containsRemoval = Boolean.TRUE.equals(entry.getValue());
+                if (!containsRemoval) {
                     continue; // solo aggiunte pure: nessun codice preesistente coinvolto
                 }
                 String key = fix.getTicketId() + "#" + entry.getKey();
@@ -66,27 +69,38 @@ public class BuggyClassExtractor {
 
         for (String line : diffLines) {
             if (line.startsWith("diff --git")) {
-                String newPath = extractNewPath(line);
-                if (newPath != null && newPath.endsWith(".java") && isProductionClass(newPath)) {
-                    currentFile = newPath;
-                    result.putIfAbsent(currentFile, false);
-                } else {
-                    currentFile = null;
-                }
-                continue;
-            }
-            if (currentFile == null) {
-                continue;
-            }
-            Matcher m = HUNK_HEADER.matcher(line);
-            if (m.matches()) {
-                int oldCount = m.group(2) == null ? 1 : Integer.parseInt(m.group(2));
-                if (oldCount > 0) {
-                    result.put(currentFile, true);
-                }
+                currentFile = resolveDiffHeaderFile(line, result);
+            } else if (currentFile != null) {
+                recordHunkIfRemovesLines(line, currentFile, result);
             }
         }
         return result;
+    }
+
+    /**
+     * Se la riga e' un header "diff --git" che introduce un file .java di produzione, lo
+     * registra in result (se non gia' presente) e ne ritorna il path; altrimenti ritorna null
+     * (nessun file "corrente" attivo, le righe successive vengono ignorate finche' non arriva
+     * un nuovo header pertinente).
+     */
+    private String resolveDiffHeaderFile(String diffGitHeaderLine, Map<String, Boolean> result) {
+        String newPath = extractNewPath(diffGitHeaderLine);
+        if (newPath != null && newPath.endsWith(".java") && isProductionClass(newPath)) {
+            result.putIfAbsent(newPath, false);
+            return newPath;
+        }
+        return null;
+    }
+
+    /** Se la riga e' un header di hunk con almeno una riga rimossa (oldCount > 0), marca currentFile come modificato. */
+    private void recordHunkIfRemovesLines(String line, String currentFile, Map<String, Boolean> result) {
+        Matcher m = HUNK_HEADER.matcher(line);
+        if (m.matches()) {
+            int oldCount = m.group(2) == null ? 1 : Integer.parseInt(m.group(2));
+            if (oldCount > 0) {
+                result.put(currentFile, true);
+            }
+        }
     }
 
     private String extractNewPath(String diffGitHeaderLine) {

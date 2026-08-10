@@ -5,45 +5,19 @@ public class DatasetRow {
     private final String project;
     private final int release;
     private final String className;
-    private final int nom;
-    private final int fanOut;
-    private final int cyclomaticComplexity;
-    private final int locTouched;
-    private final int nFix;
-    private final int nAuth;
-    private final int locAdded;
-    private final int maxLocAdded;
-    private final int churn;
-    private final int maxChurn;
-    private final int ns;
-    private final int nd;
-    private final int changeSetSize;
-    private final long age;
+    private final StructuralMetrics structuralMetrics;
+    private final ProcessMetrics processMetrics;
     private final int nSmells;
     private final boolean buggy;
 
     public DatasetRow(String project, int release, String className,
-                      int nom, int fanOut, int cyclomaticComplexity,
-                      int locTouched, int nFix, int nAuth, int locAdded, int maxLocAdded,
-                      int churn, int maxChurn, int ns, int nd, int changeSetSize, long age,
+                      StructuralMetrics structuralMetrics, ProcessMetrics processMetrics,
                       int nSmells, boolean buggy) {
         this.project = project;
         this.release = release;
         this.className = className;
-        this.nom = nom;
-        this.fanOut = fanOut;
-        this.cyclomaticComplexity = cyclomaticComplexity;
-        this.locTouched = locTouched;
-        this.nFix = nFix;
-        this.nAuth = nAuth;
-        this.locAdded = locAdded;
-        this.maxLocAdded = maxLocAdded;
-        this.churn = churn;
-        this.maxChurn = maxChurn;
-        this.ns = ns;
-        this.nd = nd;
-        this.changeSetSize = changeSetSize;
-        this.age = age;
+        this.structuralMetrics = structuralMetrics;
+        this.processMetrics = processMetrics;
         this.nSmells = nSmells;
         this.buggy = buggy;
     }
@@ -53,20 +27,20 @@ public class DatasetRow {
                 project,
                 String.valueOf(release),
                 "\"" + className + "\"",
-                String.valueOf(nom),
-                String.valueOf(fanOut),
-                String.valueOf(cyclomaticComplexity),
-                String.valueOf(locTouched),
-                String.valueOf(nFix),
-                String.valueOf(nAuth),
-                String.valueOf(locAdded),
-                String.valueOf(maxLocAdded),
-                String.valueOf(churn),
-                String.valueOf(maxChurn),
-                String.valueOf(ns),
-                String.valueOf(nd),
-                String.valueOf(changeSetSize),
-                String.valueOf(age),
+                String.valueOf(structuralMetrics.getNom()),
+                String.valueOf(structuralMetrics.getFanOut()),
+                String.valueOf(structuralMetrics.getCyclomaticComplexity()),
+                String.valueOf(processMetrics.getLocTouched()),
+                String.valueOf(processMetrics.getNFix()),
+                String.valueOf(processMetrics.getNAuth()),
+                String.valueOf(processMetrics.getLocAdded()),
+                String.valueOf(processMetrics.getMaxLocAdded()),
+                String.valueOf(processMetrics.getChurn()),
+                String.valueOf(processMetrics.getMaxChurn()),
+                String.valueOf(processMetrics.getNs()),
+                String.valueOf(processMetrics.getNd()),
+                String.valueOf(processMetrics.getChangeSetSize()),
+                String.valueOf(processMetrics.getAgeDays()),
                 String.valueOf(nSmells),
                 buggy ? "Yes" : "No"
         );

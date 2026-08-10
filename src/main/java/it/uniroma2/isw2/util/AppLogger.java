@@ -26,12 +26,12 @@ public final class AppLogger {
         ConsoleHandler handler = new ConsoleHandler();
         handler.setFormatter(new Formatter() {
             @Override
-            public String format(LogRecord record) {
-                String message = record.getMessage();
-                if (record.getThrown() != null) {
-                    message += " - " + record.getThrown();
+            public String format(LogRecord logRecord) {
+                String message = logRecord.getMessage();
+                if (logRecord.getThrown() != null) {
+                    message += " - " + logRecord.getThrown();
                 }
-                return String.format("[%s] %s%n", record.getLevel().getName(), message);
+                return String.format("[%s] %s%n", logRecord.getLevel().getName(), message);
             }
         });
 
@@ -40,7 +40,7 @@ public final class AppLogger {
     }
 
     private AppLogger() {
-        // Classe di utilita': solo metodi statici, costruttore privato
+        // Classe di utilità: solo metodi statici, costruttore privato
     }
 
     /** Sostituisce System.out.println per messaggi informativi. */

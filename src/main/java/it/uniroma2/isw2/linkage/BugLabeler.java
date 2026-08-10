@@ -16,36 +16,55 @@ public class BugLabeler {
                                              List<Ticket> tickets,
                                              List<BuggyClassEntry> buggyClassEntries) {
 
+        Map<String, Set<String>> classesByTicket = buildClassesByTicket(buggyClassEntries);
+        Map<String, Boolean> labels = initializeLabels(inventory);
+
+        for (Ticket t : tickets) {
+            markBuggyClassesForTicket(t, classesByTicket, labels);
+        }
+        return labels;
+    }
+
+    private Map<String, Set<String>> buildClassesByTicket(List<BuggyClassEntry> buggyClassEntries) {
         Map<String, Set<String>> classesByTicket = new HashMap<>();
         for (BuggyClassEntry entry : buggyClassEntries) {
             classesByTicket
                     .computeIfAbsent(entry.getTicketId(), k -> new HashSet<>())
                     .add(entry.getClassPath());
         }
+        return classesByTicket;
+    }
 
+    private Map<String, Boolean> initializeLabels(List<ReleaseClassEntry> inventory) {
         Map<String, Boolean> labels = new HashMap<>();
         for (ReleaseClassEntry rc : inventory) {
             labels.put(key(rc.getReleaseId(), rc.getClassPath()), false);
         }
+        return labels;
+    }
 
-        for (Ticket t : tickets) {
-            if (t.getInjectedVersion() == null || t.getFixVersion() == null) {
-                continue;
-            }
-            Set<String> buggyClasses = classesByTicket.get(t.getId());
-            if (buggyClasses == null || buggyClasses.isEmpty()) {
-                continue; // ticket senza fix commit collegato: nessuna classe da etichettare
-            }
-            for (int releaseId = t.getInjectedVersion(); releaseId < t.getFixVersion(); releaseId++) {
-                for (String classPath : buggyClasses) {
-                    String k = key(releaseId, classPath);
-                    if (labels.containsKey(k)) {
-                        labels.put(k, true);
-                    }
-                }
+    /**
+     * Etichetta come buggy le coppie (release, classe) coperte dalla finestra [IV, FV) di un
+     * singolo ticket. Un ticket senza IV/FV nota, o senza classi buggy collegate, non etichetta
+     * nulla: gestito con un "return" anticipato dentro questo metodo (un solo punto di uscita
+     * per condizione) invece di piu' "continue" nel loop esterno di labelClasses, cosi' quel
+     * loop resta con al piu' un break/continue.
+     */
+    private void markBuggyClassesForTicket(Ticket t, Map<String, Set<String>> classesByTicket,
+                                           Map<String, Boolean> labels) {
+        if (t.getInjectedVersion() == null || t.getFixVersion() == null) {
+            return;
+        }
+        Set<String> buggyClasses = classesByTicket.get(t.getId());
+        if (buggyClasses == null || buggyClasses.isEmpty()) {
+            return; // ticket senza fix commit collegato: nessuna classe da etichettare
+        }
+        for (int releaseId = t.getInjectedVersion(); releaseId < t.getFixVersion(); releaseId++) {
+            for (String classPath : buggyClasses) {
+                String k = key(releaseId, classPath);
+                labels.computeIfPresent(k, (mapKey, currentValue) -> true);
             }
         }
-        return labels;
     }
 
     private String key(int releaseId, String classPath) {

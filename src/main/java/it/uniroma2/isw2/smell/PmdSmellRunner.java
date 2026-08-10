@@ -100,28 +100,49 @@ public class PmdSmellRunner {
             }
             String line;
             while ((line = reader.readLine()) != null) {
-                if (line.isBlank()) {
-                    continue;
-                }
-                String[] fields = splitCsvLine(line);
-                if (fields.length < 3) {
-                    continue;
-                }
-                String absoluteFile = fields[2];
-                String relativePath = worktreePath.relativize(Path.of(absoluteFile))
-                        .toString().replace("\\", "/");
-                counts.merge(relativePath, 1, Integer::sum);
+                processReportLine(line, worktreePath, counts);
             }
         }
         return counts;
     }
 
-    private String[] splitCsvLine(String line) {
-        String[] rawFields = line.split(",(?=(?:[^\"]*\"[^\"]*\")*[^\"]*$)");
-        String[] cleaned = new String[rawFields.length];
-        for (int i = 0; i < rawFields.length; i++) {
-            cleaned[i] = rawFields[i].trim().replaceAll("^\"|\"$", "");
+    /** Analizza una riga del CSV di PMD e, se ben formata, incrementa il conteggio smell del file corrispondente. */
+    private void processReportLine(String line, Path worktreePath, Map<String, Integer> counts) {
+        if (line.isBlank()) {
+            return;
         }
-        return cleaned;
+        String[] fields = splitCsvLine(line);
+        if (fields.length < 3) {
+            return;
+        }
+        String absoluteFile = fields[2];
+        String relativePath = worktreePath.relativize(Path.of(absoluteFile))
+                .toString().replace("\\", "/");
+        counts.merge(relativePath, 1, Integer::sum);
+    }
+
+    // Split che rispetta le virgolette, cosi' una virgola dentro un campo
+    // quotato non spezza la riga a meta'. Parsing a scansione lineare (niente regex):
+    // la versione precedente basata su regex con lookahead e quantificatori annidati
+    // poteva causare backtracking catastrofico/StackOverflowError su righe lunghe.
+    private String[] splitCsvLine(String line) {
+        List<String> fields = new ArrayList<>();
+        StringBuilder current = new StringBuilder();
+        boolean insideQuotes = false;
+
+        for (int i = 0; i < line.length(); i++) {
+            char c = line.charAt(i);
+            if (c == '"') {
+                insideQuotes = !insideQuotes;
+            } else if (c == ',' && !insideQuotes) {
+                fields.add(current.toString().trim());
+                current.setLength(0);
+            } else {
+                current.append(c);
+            }
+        }
+        fields.add(current.toString().trim());
+
+        return fields.toArray(new String[0]);
     }
 }

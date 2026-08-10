@@ -225,12 +225,6 @@ public class Milestone1DatasetMain {
         int nSmells = releaseContext.smellsByReleaseAndClass().getOrDefault(
                 row.getReleaseId() + "#" + row.getClassPath(), 0);
 
-        return new DatasetRow(
-                PROJECT_NAME, row.getReleaseId(), row.getClassPath(),
-                sm.getNom(), sm.getFanOut(), sm.getCyclomaticComplexity(),
-                pm.getLocTouched(), pm.getNFix(), pm.getNAuth(), pm.getLocAdded(), pm.getMaxLocAdded(),
-                pm.getChurn(), pm.getMaxChurn(), pm.getNs(), pm.getNd(), pm.getChangeSetSize(), pm.getAgeDays(),
-                nSmells, row.isBuggy()
-        );
+        return new DatasetRow(PROJECT_NAME, row.getReleaseId(), row.getClassPath(), sm, pm, nSmells, row.isBuggy());
     }
 }
