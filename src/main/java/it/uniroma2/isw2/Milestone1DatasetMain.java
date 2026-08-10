@@ -17,6 +17,7 @@ import it.uniroma2.isw2.model.Release;
 import it.uniroma2.isw2.model.ReleaseSelector;
 import it.uniroma2.isw2.model.StructuralMetrics;
 import it.uniroma2.isw2.smell.PmdSmellRunner;
+import it.uniroma2.isw2.util.AppLogger;
 
 import java.io.FileWriter;
 import java.io.IOException;
@@ -37,7 +38,7 @@ public class Milestone1DatasetMain {
     public static void main(String[] args) throws IOException, InterruptedException {
         List<LabeledClassRelease> labeledRows =
                 new DatasetCsvReader().readLabeledInventory("labeled_inventory_checkpoint.csv");
-        System.out.println("Righe lette dal checkpoint: " + labeledRows.size());
+        AppLogger.info("Righe lette dal checkpoint: " + labeledRows.size());
 
         List<Release> allReleases = new ReleaseCsvReader().readReleases("SYNCOPEVersionInfo.csv");
         List<Release> selected = ReleaseSelector.selectFirstN(allReleases, 25);
@@ -45,10 +46,10 @@ public class Milestone1DatasetMain {
         GitCommandExecutor git = new GitCommandExecutor(REPOSITORY_PATH);
         ReleaseSnapshotResolver snapshotResolver = new ReleaseSnapshotResolver(git);
         Map<Integer, String> snapshotCommits = snapshotResolver.resolveSnapshotCommits(selected);
-        System.out.println("Snapshot risolti: " + snapshotCommits.size() + " su " + selected.size());
+        AppLogger.info("Snapshot risolti: " + snapshotCommits.size() + " su " + selected.size());
 
         Set<String> fixCommitHashes = new DatasetCsvReader().readFixCommitHashes("fix_commits_checkpoint.csv");
-        System.out.println("Fix commit hash distinti: " + fixCommitHashes.size());
+        AppLogger.info("Fix commit hash distinti: " + fixCommitHashes.size());
 
         // ---- setup rapido: commit stats per release + date finestre ----
         Map<Integer, Map<String, CommitStats>> commitStatsByRelease = new HashMap<>();
@@ -57,7 +58,7 @@ public class Milestone1DatasetMain {
             String commitHash = snapshotCommits.get(r.getId());
             if (commitHash == null) continue;
             commitStatsByRelease.put(r.getId(), statsHarvester.harvestForRelease(commitHash));
-            System.out.println("Release " + r.getId() + ": commit stats pronte");
+            AppLogger.info("Release " + r.getId() + ": commit stats pronte");
         }
 
         Map<Integer, LocalDateTime> releaseDateById = new HashMap<>();
@@ -83,7 +84,7 @@ public class Milestone1DatasetMain {
             for (Map.Entry<String, Integer> e : smells.entrySet()) {
                 smellsByReleaseAndClass.put(r.getId() + "#" + e.getKey(), e.getValue());
             }
-            System.out.println("Release " + r.getId() + ": PMD completato, " + smells.size() + " classi con smell");
+            AppLogger.info("Release " + r.getId() + ": PMD completato, " + smells.size() + " classi con smell");
         }
 
         // ---- loop finale unico: strutturali + processo + smell -> scrittura CSV ----
@@ -134,13 +135,13 @@ public class Milestone1DatasetMain {
 
                 if (processed % 500 == 0) {
                     writer.flush();
-                    System.out.println("Scritte " + processed + " righe su " + labeledRows.size() + "...");
+                    AppLogger.info("Scritte " + processed + " righe su " + labeledRows.size() + "...");
                 }
             }
         }
 
-        System.out.println("Dataset finale scritto in " + OUTPUT_CSV);
-        System.out.println("Righe totali: " + processed);
-        System.out.printf("Buggy: %d (%.2f%%)%n", buggyCount, 100.0 * buggyCount / processed);
+        AppLogger.info("Dataset finale scritto in " + OUTPUT_CSV);
+        AppLogger.info("Righe totali: " + processed);
+        AppLogger.info(String.format("Buggy: %d (%.2f%%)", buggyCount, 100.0 * buggyCount / processed));
     }
 }
