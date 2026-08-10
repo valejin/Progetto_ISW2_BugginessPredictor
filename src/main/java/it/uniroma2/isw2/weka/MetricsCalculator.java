@@ -1,5 +1,7 @@
 package it.uniroma2.isw2.weka;
 
+import it.uniroma2.isw2.util.AppLogger;
+
 import java.io.BufferedReader;
 import java.io.FileReader;
 import java.io.FileWriter;
@@ -25,11 +27,11 @@ public class MetricsCalculator {
 
     public static void main(String[] args) throws IOException {
         List<Map<String, String>> summaryRows = readCsv(SUMMARY_PATH);
-        System.out.println("Righe lette da weka_results_summary.csv: " + summaryRows.size());
+        AppLogger.info("Righe lette da weka_results_summary.csv: " + summaryRows.size());
 
         Map<String, List<Double>> npofb20ByKey = new TreeMap<>();
         List<Map<String, String>> distributionRows = readCsv(NPOFB20_DISTRIBUTION_PATH);
-        System.out.println("Righe lette da npofb20_distribution.csv: " + distributionRows.size());
+        AppLogger.info("Righe lette da npofb20_distribution.csv: " + distributionRows.size());
 
         for (Map<String, String> row : distributionRows) {
             String key = row.get("Configurazione") + "|" + row.get("Classificatore");
@@ -52,7 +54,7 @@ public class MetricsCalculator {
                 List<Double> values = npofb20ByKey.get(key);
 
                 if (values == null || values.isEmpty()) {
-                    System.out.println("ATTENZIONE: nessun valore NPofB20 trovato per " + key);
+                    AppLogger.warn("Nessun valore NPofB20 trovato per " + key);
                     continue;
                 }
 
@@ -64,7 +66,7 @@ public class MetricsCalculator {
                         row.get("AUC_media"), row.get("Kappa_media"), mean));
             }
         }
-        System.out.println("Tabella finale scritta in " + outputPath);
+        AppLogger.info("Tabella finale scritta in " + outputPath);
     }
 
     private static List<Map<String, String>> readCsv(String path) throws IOException {

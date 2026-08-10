@@ -37,27 +37,33 @@ public class ReleaseCommitStatsHarvester {
         );
 
         Map<String, CommitStats> result = new HashMap<>();
-        String currentHash = null;
-        List<String> currentPaths = new ArrayList<>();
+        HarvestState state = new HarvestState();
 
         for (String line : lines) {
-            if (line.startsWith(HEADER_PREFIX)) {
-                flush(result, currentHash, currentPaths);
-                currentHash = line.substring(HEADER_PREFIX.length()).trim();
-                currentPaths = new ArrayList<>();
-                continue;
-            }
-            if (line.isBlank()) {
-                continue;
-            }
-            String[] parts = line.split("\t", 3);
-            if (parts.length == 3) {
-                currentPaths.add(parts[2]);
-            }
+            processLine(line, result, state);
         }
-        flush(result, currentHash, currentPaths);
+        flush(result, state.currentHash, state.currentPaths);
 
         return result;
+    }
+
+    /** Stato mutabile accumulato durante la scansione: commit corrente e path toccati finora. */
+    private static final class HarvestState {
+        private String currentHash;
+        private List<String> currentPaths = new ArrayList<>();
+    }
+
+    private void processLine(String line, Map<String, CommitStats> result, HarvestState state) {
+        if (line.startsWith(HEADER_PREFIX)) {
+            flush(result, state.currentHash, state.currentPaths);
+            state.currentHash = line.substring(HEADER_PREFIX.length()).trim();
+            state.currentPaths = new ArrayList<>();
+        } else if (!line.isBlank()) {
+            String[] parts = line.split("\t", 3);
+            if (parts.length == 3) {
+                state.currentPaths.add(parts[2]);
+            }
+        }
     }
 
     private void flush(Map<String, CommitStats> result, String commitHash, List<String> paths) {

@@ -1,5 +1,8 @@
 package it.uniroma2.isw2.weka;
 
+import it.uniroma2.isw2.util.AppLogger;
+import it.uniroma2.isw2.util.CsvLineParser;
+
 import weka.attributeSelection.InfoGainAttributeEval;
 import weka.attributeSelection.Ranker;
 import weka.classifiers.Classifier;
@@ -52,12 +55,12 @@ public class NPofB20DistributionCalculator {
 
     public static void main(String[] args) throws Exception {
         Map<String, Integer> sizes = readSizes(SIZES_PATH);
-        System.out.println("Dimensioni classi lette: " + sizes.size());
+        AppLogger.info("Dimensioni classi lette: " + sizes.size());
 
         DataSource source = new DataSource(MASTER_ARFF_PATH);
         Instances data = source.getDataSet();
         data.setClassIndex(data.numAttributes() - 1);
-        System.out.println("Istanze lette: " + data.numInstances());
+        AppLogger.info("Istanze lette: " + data.numInstances());
 
         int yesIndex = data.classAttribute().indexOfValue("Yes");
         if (yesIndex < 0) {
@@ -71,7 +74,7 @@ public class NPofB20DistributionCalculator {
 
             for (String config : configs) {
                 for (String classifierName : new String[]{"RandomForest", "NaiveBayes", "IBk"}) {
-                    System.out.println("=== " + config + " / " + classifierName + " ===");
+                    AppLogger.info("=== " + config + " / " + classifierName + " ===");
 
                     for (int rep = 0; rep < NUM_REPETITIONS; rep++) {
                         int seed = rep + 1;
@@ -80,12 +83,13 @@ public class NPofB20DistributionCalculator {
                         writer.write(String.format(Locale.US, "%s,%s,%d,%.4f%n",
                                 config, classifierName, rep + 1, npofb20));
                         writer.flush();
-                        System.out.printf("  ripetizione %d/%d -> NPofB20 = %.2f%%%n", rep + 1, NUM_REPETITIONS, npofb20);
+                        AppLogger.info(String.format(Locale.US, "  ripetizione %d/%d -> NPofB20 = %.2f%%",
+                                rep + 1, NUM_REPETITIONS, npofb20));
                     }
                 }
             }
         }
-        System.out.println("Fatto. Risultati in " + OUTPUT_PATH);
+        AppLogger.info("Fatto. Risultati in " + OUTPUT_PATH);
     }
 
     private static double runOneRepetition(Instances data, String config, String classifierName,
@@ -131,6 +135,10 @@ public class NPofB20DistributionCalculator {
             totalLoc += (long) p[2];
             if (p[1] == 1.0) totalBugs++;
         }
+        if (totalBugs == 0) {
+            throw new IllegalStateException(
+                    "Nessuna istanza buggy nel fold: NPofB20 non calcolabile (totalBugs == 0)");
+        }
         double budget = BUDGET_FRACTION * totalLoc;
 
         predictions.sort((a, b) -> Double.compare(b[0] / b[2], a[0] / a[2])); // densità decrescente
@@ -143,10 +151,14 @@ public class NPofB20DistributionCalculator {
             cumulativeLoc += size;
             if (p[1] == 1.0) bugsFound++;
         }
+
         return 100.0 * bugsFound / totalBugs;
     }
 
-    private static Classifier buildClassifier(String config, String classifierName, int seed) throws Exception {
+    // Nessuna delle chiamate nel corpo (setter Weka, costruttori, IllegalArgumentException nel
+    // default) lancia eccezioni checked: il precedente "throws Exception" era superfluo
+    // (rule java:S112 - evitare di dichiarare/lanciare eccezioni generiche).
+    private static Classifier buildClassifier(String config, String classifierName, int seed) {
         Classifier base = buildBaseClassifier(classifierName, seed);
 
         switch (config) {
@@ -239,17 +251,10 @@ public class NPofB20DistributionCalculator {
             String line = reader.readLine(); // salta header
             while ((line = reader.readLine()) != null) {
                 if (line.isBlank()) continue;
-                String[] fields = splitCsvLine(line);
+                String[] fields = CsvLineParser.splitCsvLine(line);
                 result.put(fields[0] + "#" + fields[1], Integer.parseInt(fields[2]));
             }
         }
         return result;
-    }
-
-    private static String[] splitCsvLine(String line) {
-        String[] raw = line.split(",(?=(?:[^\"]*\"[^\"]*\")*[^\"]*$)");
-        String[] cleaned = new String[raw.length];
-        for (int i = 0; i < raw.length; i++) cleaned[i] = raw[i].trim().replaceAll("^\"|\"$", "");
-        return cleaned;
     }
 }

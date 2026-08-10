@@ -123,7 +123,6 @@ public class PmdSmellRunner {
     }
 
     // Split che rispetta le virgolette: implementazione centralizzata in CsvLineParser
-    // (era duplicata identica in piu' classi, generando duplicazione rilevata da SonarCloud).
     private String[] splitCsvLine(String line) {
         return CsvLineParser.splitCsvLine(line);
     }

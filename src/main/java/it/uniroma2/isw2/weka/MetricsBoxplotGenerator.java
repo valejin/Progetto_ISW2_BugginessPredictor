@@ -1,5 +1,7 @@
 package it.uniroma2.isw2.weka;
 
+import it.uniroma2.isw2.util.AppLogger;
+
 import org.jfree.chart.ChartFactory;
 import org.jfree.chart.ChartUtils;
 import org.jfree.chart.JFreeChart;
@@ -32,8 +34,13 @@ public class MetricsBoxplotGenerator {
     private static final String NPOFB20_PATH = "weka-data/npofb20_distribution.csv";
     private static final String OUTPUT_DIR = "weka-data/boxplots";
 
+    private static final String CLASSIFIER_NAIVE_BAYES = "NaiveBayes";
+    private static final String CLASSIFIER_RANDOM_FOREST = "RandomForest";
+    private static final String CLASSIFIER_IBK = "IBk";
+    private static final String CLASSIFIER_UNKNOWN = "SCONOSCIUTO";
+
     private static final String[] CONFIGS = {"Baseline", "Solo FS", "Solo Balancing", "FS + Balancing"};
-    private static final String[] CLASSIFIERS = {"NaiveBayes", "RandomForest", "IBk"};
+    private static final String[] CLASSIFIERS = {CLASSIFIER_NAIVE_BAYES, CLASSIFIER_RANDOM_FOREST, CLASSIFIER_IBK};
     private static final Color[] SERIES_COLORS = {
             new Color(76, 114, 176),   // NaiveBayes - blu
             new Color(221, 132, 82),   // RandomForest - arancione
@@ -44,7 +51,7 @@ public class MetricsBoxplotGenerator {
         new File(OUTPUT_DIR).mkdirs();
 
         List<Map<String, String>> rawResults = readCsv(WEKA_RESULTS_PATH);
-        System.out.println("Righe lette da weka_results.csv: " + rawResults.size());
+        AppLogger.info("Righe lette da weka_results.csv: " + rawResults.size());
 
         Map<String, Map<String, List<Double>>> precisionData = new LinkedHashMap<>();
         Map<String, Map<String, List<Double>>> recallData = new LinkedHashMap<>();
@@ -54,7 +61,7 @@ public class MetricsBoxplotGenerator {
         for (Map<String, String> row : rawResults) {
             String config = identifyConfiguration(row.get("Key_Scheme"), row.get("Key_Scheme_options"));
             String classifier = identifyClassifier(row.get("Key_Scheme"), row.get("Key_Scheme_options"));
-            if (config.equals("SCONOSCIUTA") || classifier.equals("SCONOSCIUTO")) continue;
+            if (config.equals("SCONOSCIUTA") || classifier.equals(CLASSIFIER_UNKNOWN)) continue;
 
             double tnNo = Double.parseDouble(row.get("Num_true_negatives"));
             double fnNo = Double.parseDouble(row.get("Num_false_negatives"));
@@ -73,7 +80,7 @@ public class MetricsBoxplotGenerator {
 
         Map<String, Map<String, List<Double>>> npofb20Data = new LinkedHashMap<>();
         List<Map<String, String>> npofb20Rows = readCsv(NPOFB20_PATH);
-        System.out.println("Righe lette da npofb20_distribution.csv: " + npofb20Rows.size());
+        AppLogger.info("Righe lette da npofb20_distribution.csv: " + npofb20Rows.size());
         for (Map<String, String> row : npofb20Rows) {
             String config = row.get("Configurazione");
             String classifier = row.get("Classificatore");
@@ -87,7 +94,7 @@ public class MetricsBoxplotGenerator {
         generateBoxplot("AUC", aucData, OUTPUT_DIR + "/boxplot_auc.png");
         generateBoxplot("NPofB20", npofb20Data, OUTPUT_DIR + "/boxplot_npofb20.png");
 
-        System.out.println("Boxplot generati in " + OUTPUT_DIR);
+        AppLogger.info("Boxplot generati in " + OUTPUT_DIR);
     }
 
     private static void addValue(Map<String, Map<String, List<Double>>> data,
@@ -106,7 +113,7 @@ public class MetricsBoxplotGenerator {
             for (String classifier : CLASSIFIERS) {
                 List<Double> values = byClassifier != null ? byClassifier.get(classifier) : null;
                 if (values == null || values.isEmpty()) {
-                    System.out.println("ATTENZIONE: nessun dato per " + metricName + " / " + config + " / " + classifier);
+                    AppLogger.warn("Nessun dato per " + metricName + " / " + config + " / " + classifier);
                     continue;
                 }
                 dataset.add(values, classifier, config);
@@ -149,15 +156,15 @@ public class MetricsBoxplotGenerator {
         }
 
         ChartUtils.saveChartAsPNG(new File(outputPath), chart, 1400, 700);
-        System.out.println("Salvato: " + outputPath);
+        AppLogger.info("Salvato: " + outputPath);
     }
 
     private static String identifyClassifier(String scheme, String schemeOptions) {
         String combined = scheme + " " + schemeOptions;
-        if (combined.contains("RandomForest")) return "RandomForest";
-        if (combined.contains("NaiveBayes")) return "NaiveBayes";
-        if (combined.contains(".IBk")) return "IBk";
-        return "SCONOSCIUTO";
+        if (combined.contains(CLASSIFIER_RANDOM_FOREST)) return CLASSIFIER_RANDOM_FOREST;
+        if (combined.contains(CLASSIFIER_NAIVE_BAYES)) return CLASSIFIER_NAIVE_BAYES;
+        if (combined.contains("." + CLASSIFIER_IBK)) return CLASSIFIER_IBK;
+        return CLASSIFIER_UNKNOWN;
     }
 
     private static String identifyConfiguration(String scheme, String schemeOptions) {
