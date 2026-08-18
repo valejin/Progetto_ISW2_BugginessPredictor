@@ -1,0 +1,2 @@
+org.apache.syncope.core.logic.CommandLogic
+org.apache.syncope.core.provisioning.java.data.NotificationDataBinderImpl
