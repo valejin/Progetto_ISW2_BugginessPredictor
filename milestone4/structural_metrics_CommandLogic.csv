@@ -1,0 +1,6 @@
+File,SIZE_LOC,NOM,AVG_METHOD_SIZE,CyclomaticComplexity,FanOut,Note
+CommandLogic.java,156,4,39.0,12,15,
+CommandLogic_C1.java,156,4,39.0,12,15,
+CommandLogic_C2.java,154,4,38.5,12,15,
+CommandLogic_C3.java,172,4,43.0,18,15,unnamed catch variable (_) -> e; pattern-matching instanceof -> instanceof classico
+CommandLogic_C4.java,156,4,39.0,12,15,

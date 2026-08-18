@@ -1,0 +1,6 @@
+File,SIZE_LOC,NOM,AVG_METHOD_SIZE,CyclomaticComplexity,FanOut,Note
+NotificationDataBinderImpl.java,184,3,61.3,12,15,
+NotificationDataBinderImpl_C1.java,184,3,61.3,12,15,
+NotificationDataBinderImpl_C2.java,184,3,61.3,12,15,
+NotificationDataBinderImpl_C3.java,184,3,61.3,12,15,
+NotificationDataBinderImpl_C4.java,184,3,61.3,12,15,
