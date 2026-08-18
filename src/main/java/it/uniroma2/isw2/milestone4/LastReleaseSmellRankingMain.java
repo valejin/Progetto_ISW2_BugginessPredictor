@@ -44,55 +44,9 @@ import java.util.Set;
 import java.util.regex.Pattern;
 
 /**
- * Milestone 4, Step 8 (Class Selection): calcola NSmells per ogni classe
+ * Milestone 4 (Class Selection): calcola NSmells per ogni classe
  * di produzione dell'ULTIMA release, limitatamente al modulo core/ (logica
- * di business - scelta esplicita, non richiesta dalla consegna del prof ma
- * dichiarata e motivata nel report), ordinando il risultato per NSmells
- * decrescente.
- *
- * Una classe entra in gara solo se soddisfa TUTTI questi criteri (versione
- * allentata rispetto alla precedente, per allargare il pool di candidate):
- * - LOC (righe del corpo della dichiarazione di tipo) >= MIN_LOC (60)
- * - non e' un'interfaccia, un enum o un'annotazione (@interface)
- * - PUO' essere una classe abstract (non piu' escluse: gestibile con una
- *   sottoclasse/mock minima, come gia' fatto in precedenza)
- * - ha almeno MIN_SUBSTANTIAL_METHODS (2) metodi pubblici "sostanziali"
- *   (pubblici, almeno un parametro DI QUALSIASI TIPO, almeno MIN_METHOD_LOC
- *   righe, complessita' ciclomatica per-metodo > MIN_METHOD_CC) - il
- *   vincolo "parametri solo semplici/enum" NON e' piu' un filtro di
- *   esclusione (non richiesto dalla consegna del prof, e restringeva troppo
- *   il pool escludendo quasi tutta la business logic che passa DTO/entity),
- *   ma resta calcolato come colonna informativa separata
- *   (SubstantialMethodsSimpleParamsOnly), utile in fase di scelta finale
- *   per stimare la difficolta' di Category Partition di ciascun candidato
- * - complessita' ciclomatica di classe tra MIN_CYCLOMATIC_COMPLEXITY (5) e
- *   MAX_CYCLOMATIC_COMPLEXITY (50) - il tetto superiore esclude classi la
- *   cui complessita' e' sproporzionata per lo scope di un progetto di
- *   corso (troppe dipendenze da mockare, troppi rami da coprire
- *   manualmente in Control-Flow/Mutation Testing) - soglia scelta
- *   ispezionando concretamente i candidati esclusi (es. una classe con
- *   CC=80 e 10 dipendenze da mockare in soli 3 metodi pubblici)
- * - NSmells (PMD) > 0
- *
- * NOTA implementativa: il controllo di forma (interface/enum/annotation) si
- * basa sul tipo primario (top-level) del file, identificato dal nome del
- * file stesso (classPath) - NON tramite CompilationUnit.getPrimaryType(),
- * che richiede uno Storage assente quando si fa il parsing da String (bug
- * gia' corretto in precedenza).
- *
- * ATTENZIONE COSTO: l'analisi (che richiede almeno una "git show" per
- * classe) viene eseguita sull'intero inventario del repository.
- *
- * NOVITA': i parametri di tipo enum sono ora considerati "semplici" ai fini
- * del conteggio dei metodi sostanziali, poiche' rappresentano comunque
- * partizioni di equivalenza valide (una per ciascun valore dell'enum),
- * secondo le linee guida di Category Partition viste a lezione con il
- * prof. De Angelis. Il riconoscimento avviene risolvendo il FQN del
- * parametro tramite gli import della classe (o il package, se non
- * importato) e cercando nell'INTERO repository (non solo in core/, perche'
- * molti enum di dominio - es. TaskType - vivono in moduli come common/*)
- * il file corrispondente al commit della release, verificando poi che
- * dichiari "enum NomeTipo".
+ * di business, ordinando il risultato per NSmells decrescente.
  */
 public class LastReleaseSmellRankingMain {
 
@@ -107,14 +61,12 @@ public class LastReleaseSmellRankingMain {
     private static final int MIN_CYCLOMATIC_COMPLEXITY = 5;
     private static final int MAX_CYCLOMATIC_COMPLEXITY = 70; // tetto: esclude classi sproporzionate
     // per lo scope del progetto (es. troppi metodi/dipendenze da mockare, CP/CF/MT
-    // manuali eccessivamente onerosi) - soglia scelta empiricamente ispezionando i
-    // candidati concreti (vedi report per la motivazione).
+    // manuali eccessivamente onerosi)
 
     // Criteri per considerare un metodo "sostanziale" (non un semplice getter/setter)
     private static final int MIN_METHOD_LOC = 10;       // righe minime nel corpo del metodo
     private static final int MIN_METHOD_CC = 1;          // complessità ciclomatica del singolo metodo
-    // ATTENZIONE (da documentare nel report): questa soglia è impostata a 1, quindi in pratica
-    // basta CC > 1.
+
     private static final int MIN_SUBSTANTIAL_METHODS = 2; // almeno 2 metodi così per classe
 
     private static final Set<String> SIMPLE_TYPES = new HashSet<>(List.of(
